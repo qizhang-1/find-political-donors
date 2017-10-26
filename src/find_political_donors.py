@@ -8,7 +8,7 @@ def main():
     output_filename_id_date = sys.argv[3]
 
     io = rf.InputOutput(input_filename, output_filename_id_zip, output_filename_id_date, '|')
-    io.read_and_process_file()
+    io.read_process_write()
 
 
 if __name__ == "__main__":
