@@ -142,7 +142,7 @@ class InputOutput:
             if zip_code:
                 key = (recipient_id, zip_code)
                 self.database.insert_record(key, amount)
-                my_data = [key[0], self.transform_date_yyyymmdd_to_mmddyyyy(key[1]), self.database.find_median(key),
+                my_data = [key[0], key[1], self.database.find_median(key),
                            self.database.find_record_number(key), self.database.find_sum(key)]
                 writer.writerow(my_data)
 
