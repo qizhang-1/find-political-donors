@@ -65,12 +65,16 @@ class DataBase:
         :param key: tuple
         :return: the median of the donations
         '''
+        def myround(x):
+            if abs(x) < 0.001:
+                return 0
+            return int(x + 0.5001) if x > 0 else int(x - 0.5001)
         my_map = self.select_dictionary(key)
 
         min_heap, max_heap = my_map[key][0], my_map[key][1]
         if len(max_heap) > len(min_heap):
-            return int(round(max_heap[0]))
-        return int(round((max_heap[0] - min_heap[0]) / 2.0))
+            return myround(max_heap[0])
+        return myround((max_heap[0] - min_heap[0]) / 2.0)
 
 
 class InputOutput:
@@ -96,57 +100,37 @@ class InputOutput:
                 return None
             return float(val)
 
+        def get_date(token):
+
+            ''' parse a string is a valid or not
+
+            :param token: str
+            :return: original string if valid else None
+            '''
+
+            if len(token) != 8 or not token.isdigit():
+                return None
+            mm, dd, yy = int(token[0:2]), int(token[2:4]), int(token[4:8])
+            if mm == 0 or mm > 12 or dd == 0 or dd > 31 or yy < 1900:
+                return None
+            if mm in [4, 6, 9, 11] and dd == 31:
+                return None
+            if (mm == 2 and dd >= 30) or ((yy % 4 != 0) and mm == 2 and dd >= 29):
+                return None
+            return token
+        
         tokens = line.split(delimiter)
         token = tokens[0].strip()
         cmtd_id = token if len(token) != 0 else None
         token = tokens[10].strip()
         zipcode = token[0:5] if len(tokens[10]) >= 5 and token[0:5].isdigit() else None
         token = tokens[13].strip()
-        date = token if len(token) == 8 else None
+        date = get_date(token)
         token = tokens[14].strip()
         amount = get_transaction_amount(token)
         token = tokens[15].strip()
         other_id = token if len(token) != 0 else None
         return cmtd_id, zipcode, date, amount, other_id
-
-    # def is_valid_id(self, token):
-    #     return len(token) > 0
-    #
-    #
-    # def is_valid_transaction_amount(self, token):
-    #     try:
-    #         float(token)
-    #     except ValueError:
-    #         return False
-    #     return True
-    #
-    # def parse_zipcode(self, token):
-    #     ''' parse a zipcode is valid or not
-    #
-    #     :param token: str
-    #     :return: None if invalid else the first five digits
-    #     '''
-    #     if len(token) < 5 or not token[0:5].isdigit():
-    #         return None
-    #     return token[0:5]
-    #
-    # def is_valid_date(self, token):
-    #     ''' parse a string is a valid or not
-    #
-    #     :param token: str
-    #     :return: True if valid else False
-    #     '''
-    #
-    #     if len(token) != 8 or not token.isdigit():
-    #         return False
-    #     mm, dd, yy = int(token[0:2]), int(token[2:4]), int(token[4:8])
-    #     if mm == 0 or mm > 12 or dd == 0 or dd > 31 or yy < 1900:
-    #         return False
-    #     if mm in [4, 6, 9, 11] and dd == 31:
-    #         return False
-    #     if (mm == 2 and dd >= 30) or ((yy % 4 != 0) and mm == 2 and dd >= 29):
-    #         return False
-    #     return True
 
     @staticmethod
     def transform_date_mmddyyyy_to_yyyymmdd(date):
@@ -164,7 +148,7 @@ class InputOutput:
         :param delimiter: splitter (i.e. ',' or '|' or ' ' etc.)
         :return: None
         '''
-        
+
         my_data = []
         for key in sorted(my_map.keys(), key=itemgetter(0, 1)):
             record = [key[0], self.transform_date_yyyymmdd_to_mmddyyyy(key[1]), self.database.find_median(key),
@@ -182,16 +166,18 @@ class InputOutput:
         input_file_handle = open(self.input_filename, 'r')
         output_file_handle = open(self.output_filename_id_zip, 'w')
         writer = csv.writer(output_file_handle, delimiter=self.delimiter)
+        k = 0
         for line in input_file_handle:
             cmtd_id, zipcode, date, amount, other_id = self.parse_single_input_line(line, self.delimiter)
-
             # pass if either one the three conditions is True:
             # 1. cmtd_id is invalid
             # 2. transaction_amt is invalid
             # 3. other_id is valid
-            if not cmtd_id or not amount or other_id :
+
+            if cmtd_id is None or amount is None or other_id is not None:
                 continue
 
+            # check valid zipcode or not
             if zipcode:
                 key = (cmtd_id, zipcode)
                 self.database.insert_record(key, amount)
@@ -212,8 +198,8 @@ class InputOutput:
 # for test purpose only
 if __name__ == '__main__':
     input_filename = '../input/itcont.txt'
-    output_filename_id_zip = '../output/median_id_zip.txt'
-    output_filename_id_date = '../output/median_id_date.txt'
+    output_filename_id_zip = '../output/medianvals_by_zip.txt'
+    output_filename_id_date = '../output/medianvals_by_date.txt'
     io = InputOutput(input_filename, output_filename_id_zip, output_filename_id_date, '|')
     io.read_process_write()
 
