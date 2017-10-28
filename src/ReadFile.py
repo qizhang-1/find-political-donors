@@ -118,12 +118,12 @@ class InputOutput:
             if (mm == 2 and dd >= 30) or ((yy % 4 != 0) and mm == 2 and dd >= 29):
                 return None
             return token
-        
+
         tokens = line.split(delimiter)
         token = tokens[0].strip()
         cmtd_id = token if len(token) != 0 else None
         token = tokens[10].strip()
-        zipcode = token[0:5] if len(tokens[10]) >= 5 and token[0:5].isdigit() else None
+        zipcode = token[0:5] if len(token) >= 5 and token[0:5].isdigit() else None
         token = tokens[13].strip()
         date = get_date(token)
         token = tokens[14].strip()
@@ -166,7 +166,6 @@ class InputOutput:
         input_file_handle = open(self.input_filename, 'r')
         output_file_handle = open(self.output_filename_id_zip, 'w')
         writer = csv.writer(output_file_handle, delimiter=self.delimiter)
-        k = 0
         for line in input_file_handle:
             cmtd_id, zipcode, date, amount, other_id = self.parse_single_input_line(line, self.delimiter)
             # pass if either one the three conditions is True:
